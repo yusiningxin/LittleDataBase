@@ -3,6 +3,7 @@
 #include<cstdlib> 
 #include<string>
 #include<vector>
+#include<set>
 using namespace std;
 
 
@@ -68,6 +69,8 @@ public:
 	FILEP GetRoot();
 	void WriteRFile(TRecord record,bool flag);
 	vector<FILEP> ReadF(SearchResult &result);
+	vector<FILEP> ReadF_Only(SearchResult &result, set<FILEP> &st);
+	void Select(SearchResult &result, set<FILEP> &st, set<FILEP> &t);
 	BPlusTree(string file);
 	~BPlusTree();
 };

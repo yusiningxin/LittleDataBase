@@ -953,7 +953,75 @@ vector<FILEP> BPlusTree::ReadF(SearchResult &result)
 	return vec;
 }
 
-	
+vector<FILEP> BPlusTree::ReadF_Only(SearchResult &result, set<FILEP> &st)
+{
+	vector<FILEP> vec;
+	_fseeki64(Rfile, result.Raddress, SEEK_SET);
+	FILEP *tmp;
+	int n = 5, cnt = 1;
+	tmp = new FILEP[n];
+	while (fread(tmp, sizeof(FILEP)*n, 1, Rfile))
+	{
+		if (cnt == 1)
+		{
+			result.idNum = tmp[0];
+			for (int i = 2; i < n - 1; i++)
+			{
+				if (tmp[i] == 0) break;
+				if(st.find(tmp[i])==st.end()) vec.push_back(tmp[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n - 1; i++)
+			{
+				if (tmp[i] == 0) break;
+				if (st.find(tmp[i]) == st.end()) vec.push_back(tmp[i]);
+			}
+		}
+		if (tmp[n - 1] == 0) break;
+		_fseeki64(Rfile, tmp[n - 1], SEEK_SET);
+		cnt++;
+		n = (1 << cnt) + 1;
+		delete[]tmp;
+		tmp = new FILEP[n];
+	}
+	delete[]tmp;
+	return vec;
+}
+void BPlusTree::Select(SearchResult &result, set<FILEP> &st,set<FILEP> &t)
+{
+	_fseeki64(Rfile, result.Raddress, SEEK_SET);
+	FILEP *tmp;
+	int n = 5, cnt = 1;
+	tmp = new FILEP[n];
+	while (fread(tmp, sizeof(FILEP)*n, 1, Rfile))
+	{
+		if (cnt == 1)
+		{
+			for (int i = 2; i < n - 1; i++)
+			{
+				if (tmp[i] == 0) break;
+				if (t.find(tmp[i]) == t.end()) st.insert(tmp[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n - 1; i++)
+			{
+				if (tmp[i] == 0) break;
+				if (t.find(tmp[i]) == t.end()) st.insert(tmp[i]);
+			}
+		}
+		if (tmp[n - 1] == 0) break;
+		_fseeki64(Rfile, tmp[n - 1], SEEK_SET);
+		cnt++;
+		n = (1 << cnt) + 1;
+		delete[]tmp;
+		tmp = new FILEP[n];
+	}
+	delete[]tmp;
+}
 
 
 inline void BPlusTree::ReadBPlusNode(const FILEP address, BPlusNode   &r) const //读取address地址上的一块B+树节点  

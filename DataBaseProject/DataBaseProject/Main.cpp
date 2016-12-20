@@ -7,6 +7,7 @@
 #include "SimpleBplusTree.h"
 #include <algorithm>
 #include <queue>
+#include <set>
 const int MAXN = 1e3;
 #import "C:\Program Files\Common Files\System\ado\msado15.dll" no_namespace rename("EOF","adoEOF")  
 using namespace std;
@@ -16,7 +17,210 @@ SimpleBPlusTree IDtree("IDtree.txt"),SPOtree("SPOtree.txt");
 TRecord record;
 SearchResult result;
 
-vector<FILEP> vec[MAXN];
+set <FILEP> st;
+struct TOPKEY
+{
+	vector<FILEP> vec;
+	double score;
+	int type;
+}key[MAXN];
+
+struct NodeUP
+{
+	double down;
+	double up;
+	FILEP id;
+	NodeUP(FILEP _id, double _down,double _up) :id(_id), down(_down), up(_up){}
+	bool operator < (NodeUP A) const //从小到大排列
+	{
+		return up > A.up;
+	}
+};
+struct NodeDOWN
+{
+	double down;
+	double up;
+	FILEP id;
+	NodeDOWN(FILEP _id, double _down, double _up) :id(_id), down(_down), up(_up){}
+	bool operator < (NodeDOWN A) const //下限从小到大排列，下限相同上限从小到大排
+	{
+		if (down!=A.down) return down > A.down;
+		return up > A.up;
+	}
+};
+priority_queue <NodeDOWN> topk;
+priority_queue <NodeUP> extra;
+vector<FILEP>::iterator iter;
+struct INDEX
+{
+	double score;
+	int id;
+	INDEX(int _id, double _score) :score(_score), id(_id){}
+	bool operator < (INDEX A) const
+	{
+		return score > A.score;
+	}
+};
+vector <INDEX> tmp;
+
+void FindTopK(int n)
+{
+	tmp.clear();
+	int K = 10,cnt=0;
+	double maxx=0,up,down;
+	for (int i = 1; i <= n; i++) maxx+=key[i].score,sort(key[i].vec.begin(), key[i].vec.end()),tmp.push_back(INDEX(i,key[i].score));
+	sort(tmp.begin(), tmp.end());
+
+	for (int i = 1; i <= n; i++)
+	{
+		int id = tmp[i].id;
+		for (int j = 0; j < key[id].vec.size(); j++)
+		{
+			int  a = key[id].vec[j];
+			up = down = 0;
+			if (cnt < K)
+			{
+				for (int k = i + 1; k <= n; k++)
+				{
+					iter = lower_bound(key[tmp[k].id].vec.begin(), key[tmp[k].id].vec.end(), a);
+					if (iter != key[tmp[k].id].vec.end() && key[tmp[k].id].vec[iter - key[tmp[k].id].vec.begin()] == a)
+					{
+						if (key[tmp[k].id].type == 1 || key[tmp[k].id].type == 3) down += tmp[k].score, up += tmp[k].score;
+						else up += tmp[k].score;
+					}
+				}
+				topk.push(NodeDOWN(a,down,up));
+				cnt++;
+			}
+			else
+			{
+				if (maxx < topk.top().down) break;
+				for (int k = i + 1; k <= n; k++)
+				{
+					iter = lower_bound(key[tmp[k].id].vec.begin(), key[tmp[k].id].vec.end(), a);
+					if (iter != key[tmp[k].id].vec.end() && key[tmp[k].id].vec[iter - key[tmp[k].id].vec.begin()] == a)
+					{
+						if (key[tmp[k].id].type == 1 || key[tmp[k].id].type == 3) down += tmp[k].score, up += tmp[k].score;
+						else up += tmp[k].score;
+					}
+				}
+				if (down > topk.top().down)
+				{
+					topk.push(NodeDOWN(a, down, up));
+					cnt++;
+					while (cnt - K) topk.pop(),cnt--;
+				}
+				else if (down == topk.top().down)
+				{
+					topk.push(NodeDOWN(a, down, up));
+					cnt++;
+				}
+				else if (up >= topk.top().down)
+				{
+					extra.push(NodeUP(a, down, up));
+				}
+				while (extra.top().up < topk.top().down) extra.pop();
+			}
+		}
+	}
+}
+void Solve()
+{
+	string sub, pro, obj;
+	int p,cnt = 0,sum;
+	printf("请输入总共要查询的实体个数：\n");
+	cin >> sum;
+	while (true)
+	{
+		cnt++;
+		printf("查询第%d个实体：\n", cnt);
+		int num=0, flag,Only = false;
+		st.clear();
+		while (true)
+		{
+			num++;
+			printf("请选择已知边的类型：\n1--出边且确定边  2--出边且不确定边  3--入边且确定边  4--入边且不确定边\n");
+			cin >> key[num].type;
+			if (key[num].type == 1)
+			{
+				printf("是否为唯一属性：1--唯一属性  0--不唯一属性\n");
+				cin >> flag;
+				if (flag) Only = true;
+				printf("请输入谓词 宾语以及边的权重： ");
+				cin >> pro >> obj;
+				cin >> key[num].score;
+				key[num].vec.clear();
+				record.key = HashMap(pro, obj);
+				POStree.Search_BPlus_Tree(record, result, p);
+				if (result.exist)
+				{
+					if (Only)
+					{
+						set<FILEP> t;
+						key[num].vec = POStree.ReadF_Only(result, st);
+						record.key = HashMap(pro, pro);
+						PStree.Search_BPlus_Tree(record, result, p);
+						if (result.exist)
+						{
+							for (int i = 0; i < key[num].vec.size(); i++) t.insert(key[num].vec[i]);
+							PStree.Select(result, st,t);
+						}
+					}
+					else key[num].vec = POStree.ReadF(result);
+
+				}
+			}
+			else if (key[num].type == 2)
+			{
+				printf("请输入谓词及边的权重： ");
+				cin >> pro;
+				cin >> key[num].score;
+				key[num].vec.clear();
+				record.key = HashMap(pro, obj);
+				PStree.Search_BPlus_Tree(record, result, p);
+				if (result.exist)
+				{
+					if (Only) key[num].vec = PStree.ReadF_Only(result, st);
+					else key[num].vec = PStree.ReadF(result);
+				}
+			}
+			else if (key[num].type == 3)
+			{
+				printf("请输入主语 谓词及边的权重： ");
+				cin >> sub >> pro;
+				cin >> key[num].score;
+				key[num].vec.clear();
+				record.key = HashMap(sub, pro);
+				SPOtree.Search_BPlus_Tree(record, result, p);
+				if (result.exist)
+				{
+					if (!(Only && st.find(result.idNum) != st.end()))  key[num].vec.push_back(result.idNum);
+				}
+			}
+			else if (key[num].type == 4)
+			{
+				printf("请输入谓词及边的权重： ");
+				cin >> pro;
+				cin >> key[num].score;
+				key[num].vec.clear();
+				record.key = HashMap(pro, pro);
+				POtree.Search_BPlus_Tree(record, result, p);
+				if (result.exist)
+				{
+					if (Only) key[num].vec = POtree.ReadF_Only(result, st);
+					else key[num].vec = POtree.ReadF(result);
+				}
+			}
+			else break;
+		}
+		num--;
+		FindTopK(num);
+		if (cnt == sum) break;
+	}
+	
+}
+
+//注意设置多字符集 以及 MFC另外加BE SAFE, MFC多字符集插件 
 int main()
 {
 	CoInitialize(NULL);          
@@ -93,7 +297,6 @@ int main()
 			IDtree.Search_BPlus_Tree(record, result, p);
 			Sid = result.idNum;
 
-
 			//宾语为实体，建立SPO索引
 			if (Oid!=0)
 			{
@@ -126,263 +329,14 @@ int main()
 		pRst->MoveNext();
 	}
 	cout <<"建立索引: "<< clock() - time << endl;
-	/*---------------------------------------------------建立索引完成-------------------------------------------*/
-	int cnt = 0;
-	string sub, pro, obj;
 	IDtree.~SimpleBPlusTree();
 	SPOtree.~SimpleBPlusTree();
 	POStree.~BPlusTree();
 	POtree.~BPlusTree();
 	PStree.~BPlusTree();
-	while (true)
-	{
-		printf("请输入要查询的入边：\n");
-		
-		while (true)
-		{
-			cout << "请输入确定边:\n";
-			cin >> sub >> pro;
-			if (sub=="0"||pro == "0") break;
-			record.key = HashMap(sub, pro);
-			SPOtree.Search_BPlus_Tree(record,result,p);
-			if (result.exist)
-			{
-				cout << "Find it:  " <<result.idNum<< endl;
-			}
-		}
-		while (true)
-		{
-			cout << "请输入不确定边:\n";
-			cin >> pro;
-			if (pro == "0") break;
-			record.key = HashMap(pro, pro);
-			POtree.Search_BPlus_Tree(record, result, p);
-			if (result.exist)
-			{
-				vec[cnt] = POtree.ReadF(result);
-				cout << vec[cnt].size() << endl;
-				//for (int i = 0; i < vec[cnt].size(); i++) cout << vec[cnt][i] << " ";
-				cout << endl;
-			}
-		}
 
-		printf("请输入要查询的出边：\n");
-		while (true)
-		{
-			cout << "请输入确定边:\n";
-			cin >> pro >> obj;
-			if (obj == "0" || pro == "0") break;
-			record.key = HashMap(pro, obj);
-			POStree.Search_BPlus_Tree(record, result, p);
-			if (result.exist)
-			{
-				vec[cnt] = POStree.ReadF(result);
-				cout << vec[cnt].size() << endl;
-				//for (int i = 0; i < vec[cnt].size(); i++) cout << vec[cnt][i] << " ";
-				cout << endl;
-			}
-		}
-		while (true)
-		{
-			cout << "请输入不确定边:\n";
-			cin >> pro;
-			if (pro == "0") break;
-			record.key = HashMap(pro, pro);
-			PStree.Search_BPlus_Tree(record, result, p);
-			if (result.exist)
-			{
-				vec[cnt] = PStree.ReadF(result);
-				cout << vec[cnt].size() << endl;
-				//for (int i = 0; i < vec[cnt].size(); i++) cout << vec[cnt][i] << " ";
-				cout << endl;
-			}
-		}
+	/*---------------------------------------------------建立索引完成-------------------------------------------*/
+	Solve();
 
-	}
 	return 0;
 }
-//struct Node
-//{
-//	double cost;
-//	int id;
-//	Node(double _id, int _cost) :cost(_cost), id(_id){}
-//	bool operator < (Node A) const
-//	{
-//		return cost < A.cost;
-//	}
-//};
-//vector <Node> tmp;
-//priority_queue <Node> topk;
-//vector <FILEP> vec[1000];
-//vector<FILEP>::iterator iter;
-//
-//注意设置多字符集 以及 MFC另外加BE SAFE, MFC多字符集插件 
-//
-//
-//void FindTopK(int n)
-//{
-//	for (int i = 0; i < n; i++) sort(vec[i].begin(), vec[i].end());
-//	for (int i = 0; i < n; i++)
-//	{
-//		for (int j = 0; j < vec[i].size(); j++)
-//		{
-//			cout << vec[i][j] << " ";
-//		}
-//		cout << endl;
-//	}
-//	getchar();
-//	/*
-//	int k = 3, cnt = 0;
-//	double maxx = 1;
-//	sort(tmp.begin(), tmp.end());
-//	for (int i = 0; i < n; i++)
-//	{
-//		int id = tmp[i].id;
-//		for (int j = 0; j < vec[id].size(); j++)
-//		{
-//			int key = vec[id][j];
-//			double score = 0;
-//			if (cnt < k)
-//			{
-//				for (int k = i + 1; k <= n; k++)
-//				{
-//					iter=lower_bound(vec[tmp[k].id].begin(), vec[tmp[k].id].end(), key);
-//					if (iter != vec[tmp[k].id].end() && vec[tmp[k].id][iter - vec[tmp[k].id].begin()] == key)
-//					{
-//						score += tmp[k].cost;
-//					}
-//				}
-//				topk.push(Node(key, score));
-//			}
-//			else
-//			{
-//				if (maxx < topk.top().cost) break;
-//				for (int k = i + 1; k <= n; k++)
-//				{
-//					iter = lower_bound(vec[tmp[k].id].begin(), vec[tmp[k].id].end(), key);
-//					if (iter != vec[tmp[k].id].end() && vec[tmp[k].id][iter - vec[tmp[k].id].begin()] == key)
-//					{
-//						score += tmp[k].cost;
-//					}
-//				}
-//				if (score>topk.top().cost) topk.push(Node(key, score));
-//			}
-//		}
-//	}*/
-//}
-//diedOnDate "1970-##-##"^^xsd:date wasBornOnDate "1979-##-##"^^xsd:date
-//void  InputKey()
-//{
-//	string property, object;
-//	double score;
-//	int cnt = 0, p,flag;
-//	printf("Please input your search:\n");
-//	while (cin >> property >> object)
-//	{
-//		cout << property << object;
-//		record.key = HashMap(property, object);
-//		cout << record.key << endl;
-//		tree.Search_BPlus_Tree(record, result, p);
-//		if (result.exist)
-//		{
-//			vec[cnt] = tree.ReadF(result);
-//			for (int i = 0; i < vec[cnt].size(); i++) cout << vec[cnt][i] << " ";
-//			cout << endl;
-//			cnt++;
-//		}
-//		if (object == "0") break;
-//	}
-//	FindTopK(cnt);
-//}
-//
-//int main()
-//{
-//	CoInitialize(NULL);          
-//	_ConnectionPtr pMyConnect(__uuidof(Connection));
-//	_RecordsetPtr pRst(__uuidof(Recordset));
-//	_RecordsetPtr pOst(__uuidof(Recordset)); 
-//	try
-//	{
-//		pMyConnect->Open("Provider=SQLOLEDB; Server=.;Database=local; uid=sa; pwd=123456;", "", "", adModeUnknown);
-//	}
-//	catch (_com_error &e)
-//	{
-//		cout << "Initiate failed!" << endl;
-//		cout << e.Description() << endl;
-//		cout << e.HelpFile() << endl;
-//		return 0;
-//	}
-//	cout << "Connect succeed!" << endl;
-//	/*---------------------------------------------连接数据库成功-------------------------------------------*/
-//	vector<_bstr_t> col;
-//	CString sql;
-//	sql.Format("select * from HEHE");
-//	pRst = pMyConnect->Execute((_bstr_t)sql, NULL, adCmdText);      
-//	if (!pRst->BOF) pRst->MoveFirst();
-//	else cout << "Test data is empty!" << endl;
-//	int N=10;
-//
-//	for (int i = 0; i< pRst->Fields->GetCount(); i++)
-//	{
-//		col.push_back(pRst->Fields->GetItem(_variant_t((long)i))->Name);
-//	}
-//	int SubNum=0,N=300;
-//	/*对表进行遍历访问,显示表中每一行的内容*/
-//
-//	while (!pRst->adoEOF && N--)
-//	{
-//		string tmp[4];
-//		bool flag = true;
-//		vector<_bstr_t>::iterator iter = col.begin();
-//		int i = 0;
-//		for (iter; iter != col.end(); iter++,i++)
-//		{
-//			if (pRst->GetCollect(*iter).vt != VT_NULL)
-//			{
-//				tmp[i] = (string)(_bstr_t)pRst->GetCollect(*iter);
-//			}
-//			else flag = false;
-//		}
-//		if (flag)
-//		{
-//			string subject = tmp[0];
-//			sql.Format("select id from Sub where sub = \'%s\'", subject.c_str());
-//			pOst = pMyConnect->Execute((_bstr_t)sql, NULL, adCmdText);
-//			if (!pOst->BOF) record.id = pOst->GetCollect("id");
-//			else
-//			{
-//				sql.Format("insert into Sub values('%s')",subject.c_str());
-//				pMyConnect->Execute((_bstr_t)sql, NULL, adCmdText);
-//				SubNum++;
-//				record.id = SubNum;
-//			}
-//			
-//			cout << record.id << endl;
-//			record.key = HashMap(tmp[1], tmp[2]);
-//			cout << tmp[1] << tmp[2] << record.key << endl;
-//			tree.Insert_BPlus_Tree(record);
-//		}
-//		pRst->MoveNext();
-//	}
-//	步骤4：关闭数据源
-//	/*关闭数据库并释放指针*/
-//	tree.~BPlusTree();
-//	try
-//	{
-//		pRst->Close();     //关闭记录集               
-//		pMyConnect->Close();//关闭数据库               
-//		pRst.Release();//释放记录集对象指针               
-//		pMyConnect.Release();//释放连接对象指针
-//	}
-//	catch (_com_error &e)
-//	{
-//		cout << e.Description() << endl;
-//		cout << e.HelpFile() << endl;
-//		return 0;
-//	}
-//	CoUninitialize(); //释放COM环境
-//	
-//	tree.EnumLeafKey();
-//	InputKey();
-//	return 0;
-//}

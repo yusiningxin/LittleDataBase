@@ -1,23 +1,29 @@
-﻿Build started 2016/12/10 21:28:44.
-     1>Project "C:\Users\Administrator\Desktop\DataBaseProject\DataBaseProject\DataBaseProject.vcxproj" on node 2 (Build target(s)).
+﻿Build started 2016/12/20 16:24:15.
+     1>Project "F:\Program\DataBaseProject\DataBaseProject\DataBaseProject.vcxproj" on node 2 (Rebuild target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _CRT_SECURE_NO_WARNINGS /D _MBCS /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Main.cpp SimpleBplusTree.cpp
-         Main.cpp
-     1>c:\program files (x86)\microsoft visual studio 12.0\vc\atlmfc\include\afx.h(38): warning C4996: 'MBCS_Support_Deprecated_In_MFC': MBCS support in MFC is deprecated and may be removed in a future version of MFC.
-                 c:\program files (x86)\microsoft visual studio 12.0\vc\atlmfc\include\afx.h(33) : see declaration of 'MBCS_Support_Deprecated_In_MFC'
-         _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
-     1>c:\users\administrator\desktop\databaseproject\databaseproject\main.cpp(10): warning C4244: 'initializing' : conversion from 'double' to 'const int', possible loss of data
-         Generating Code...
-         Compiling...
+         D:\Program Files\VS2013\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _CRT_SECURE_NO_WARNINGS /D _MBCS /D _AFXDLL /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt BPlusTree.cpp Main.cpp SimpleBplusTree.cpp
          SimpleBplusTree.cpp
+         Main.cpp
+     1>d:\program files\vs2013\vc\atlmfc\include\afx.h(38): warning C4996: 'MBCS_Support_Deprecated_In_MFC': MBCS support in MFC is deprecated and may be removed in a future version of MFC.
+                 d:\program files\vs2013\vc\atlmfc\include\afx.h(33) : see declaration of 'MBCS_Support_Deprecated_In_MFC'
+         _WIN32_WINNT not defined. Defaulting to _WIN32_WINNT_MAXVER (see WinSDKVer.h)
+     1>f:\program\databaseproject\databaseproject\main.cpp(11): warning C4244: 'initializing' : conversion from 'double' to 'const int', possible loss of data
+     1>f:\program\databaseproject\databaseproject\main.cpp(77): warning C4018: '<' : signed/unsigned mismatch
+     1>f:\program\databaseproject\databaseproject\main.cpp(79): warning C4244: 'initializing' : conversion from '__int64' to 'int', possible loss of data
+     1>f:\program\databaseproject\databaseproject\main.cpp(165): warning C4018: '<' : signed/unsigned mismatch
+         BPlusTree.cpp
+     1>f:\program\databaseproject\databaseproject\bplustree.cpp(1056): warning C4334: '<<' : result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+     1>f:\program\databaseproject\databaseproject\bplustree.cpp(1065): warning C4554: '<<' : check operator precedence for possible error; use parentheses to clarify precedence
+     1>f:\program\databaseproject\databaseproject\bplustree.cpp(1103): warning C4334: '<<' : result of 32-bit shift implicitly converted to 64 bits (was 64-bit shift intended?)
+     1>f:\program\databaseproject\databaseproject\bplustree.cpp(1104): warning C4244: '=' : conversion from 'FILEP' to 'int', possible loss of data
          Generating Code...
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Administrator\Desktop\DataBaseProject\Debug\DataBaseProject.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\Users\Administrator\Desktop\DataBaseProject\Debug\DataBaseProject.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Administrator\Desktop\DataBaseProject\Debug\DataBaseProject.lib" /MACHINE:X86 Debug\BPlusTree.obj
+         D:\Program Files\VS2013\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"F:\Program\DataBaseProject\Debug\DataBaseProject.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"D:\Program Files\VS2013\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"F:\Program\DataBaseProject\Debug\DataBaseProject.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\Program\DataBaseProject\Debug\DataBaseProject.lib" /MACHINE:X86 Debug\BPlusTree.obj
          Debug\Main.obj
          Debug\SimpleBplusTree.obj
-         DataBaseProject.vcxproj -> C:\Users\Administrator\Desktop\DataBaseProject\Debug\DataBaseProject.exe
-     1>Done Building Project "C:\Users\Administrator\Desktop\DataBaseProject\DataBaseProject\DataBaseProject.vcxproj" (Build target(s)).
+         DataBaseProject.vcxproj -> F:\Program\DataBaseProject\Debug\DataBaseProject.exe
+     1>Done Building Project "F:\Program\DataBaseProject\DataBaseProject\DataBaseProject.vcxproj" (Rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:08.33
+Time Elapsed 00:00:06.51
